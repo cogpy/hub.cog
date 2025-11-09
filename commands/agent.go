@@ -11,7 +11,7 @@ import (
 )
 
 var cmdAgent = &Command{
-	Run:   agent,
+	Run:   printHelp,
 	Usage: "agent <command> [options]",
 	Long: `Manage OpenCog cognitive agents for autonomous multi-agent orchestration.
 
@@ -48,58 +48,89 @@ var cmdAgent = &Command{
 	# List available agent types
 	$ hub agent types
 `,
+}
+
+var cmdAgentCreate = &Command{
+	Key:   "create",
+	Run:   agentCreate,
+	Usage: "agent create --name <NAME> --type <TYPE> [--repo <URL>] [--branch <BRANCH>]",
+	Long:  `Create a new cognitive agent.`,
 	KnownFlags: `
 	--name <NAME>
-		Agent name (required for create)
+		Agent name (required)
 
 	--type <TYPE>
-		Agent type (required for create)
+		Agent type (required)
 
 	--repo <URL>
-		Git repository URL (optional for create)
+		Git repository URL (optional)
 
 	--branch <BRANCH>
-		Git branch (optional for create, default: main)
-
-	--verbose
-		Show detailed information (for list)
+		Git branch (optional, default: main)
 `,
 }
 
-func init() {
-	CmdRunner.Use(cmdAgent)
+var cmdAgentList = &Command{
+	Key:   "list",
+	Run:   agentList,
+	Usage: "agent list [--type <TYPE>] [--status <STATUS>] [--verbose]",
+	Long:  `List all registered agents.`,
+	KnownFlags: `
+	--type <TYPE>
+		Filter by agent type
+
+	--status <STATUS>
+		Filter by agent status
+
+	--verbose
+		Show detailed information
+`,
 }
 
-func agent(cmd *Command, args *Args) {
-	if args.IsParamsEmpty() {
-		ui.Errorln("Usage: hub agent <command> [options]")
-		ui.Errorln("Run 'hub agent --help' for more information")
-		os.Exit(1)
-	}
+var cmdAgentStart = &Command{
+	Key:   "start",
+	Run:   agentStart,
+	Usage: "agent start <name>",
+	Long:  `Start an agent.`,
+}
 
-	subCommand := args.FirstParam()
-	args.Params = args.Params[1:]
+var cmdAgentStop = &Command{
+	Key:   "stop",
+	Run:   agentStop,
+	Usage: "agent stop <name>",
+	Long:  `Stop an agent.`,
+}
 
-	switch subCommand {
-	case "create":
-		agentCreate(cmd, args)
-	case "list", "ls":
-		agentList(cmd, args)
-	case "start":
-		agentStart(cmd, args)
-	case "stop":
-		agentStop(cmd, args)
-	case "status":
-		agentStatus(cmd, args)
-	case "remove", "rm":
-		agentRemove(cmd, args)
-	case "types":
-		agentTypes(cmd, args)
-	default:
-		ui.Errorf("Unknown agent command: %s\n", subCommand)
-		ui.Errorln("Run 'hub agent --help' for usage information")
-		os.Exit(1)
-	}
+var cmdAgentStatus = &Command{
+	Key:   "status",
+	Run:   agentStatus,
+	Usage: "agent status <name>",
+	Long:  `Show agent status and metrics.`,
+}
+
+var cmdAgentRemove = &Command{
+	Key:   "remove",
+	Run:   agentRemove,
+	Usage: "agent remove <name>",
+	Long:  `Remove an agent.`,
+}
+
+var cmdAgentTypes = &Command{
+	Key:   "types",
+	Run:   agentTypes,
+	Usage: "agent types",
+	Long:  `List available agent types.`,
+}
+
+func init() {
+	cmdAgent.Use(cmdAgentCreate)
+	cmdAgent.Use(cmdAgentList)
+	cmdAgent.Use(cmdAgentStart)
+	cmdAgent.Use(cmdAgentStop)
+	cmdAgent.Use(cmdAgentStatus)
+	cmdAgent.Use(cmdAgentRemove)
+	cmdAgent.Use(cmdAgentTypes)
+	CmdRunner.Use(cmdAgent)
 }
 
 func agentCreate(cmd *Command, args *Args) {
